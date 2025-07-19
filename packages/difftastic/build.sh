@@ -12,6 +12,16 @@ TERMUX_PKG_BUILD_IN_SRC=true
 # needed for MIME database (optional in upstream)
 TERMUX_PKG_RECOMMENDS="file"
 
+TREESITTER_NU_COMMIT=6544c4383643cf8608d50def2247a7af8314e148
+TREESITTER_NU_SRCURL=https://github.com/nushell/tree-sitter-nu/archive/$TREESITTER_NU_COMMIT.zip
+TREESITTER_NU_SHA256=199c6580480d4b74053ad3c3b11d17e338dfebc202e841d0fa3d3c1a791d28c2
+
+termux_step_post_get_source() {
+	termux_download $TREESITTER_NU_SRCURL tree-sitter-nu.zip $TREESITTER_NU_SHA256
+	unzip tree-sitter-nu.zip
+	mv tree-sitter-nu-$TREESITTER_NU_COMMIT "$TERMUX_PKG_SRCDIR/vendored_parsers/tree-sitter-nu"
+}
+
 termux_step_post_make_install() {
 	install -Dm644 -t "$TERMUX_PREFIX/share/man/man1/" difft.1
 }

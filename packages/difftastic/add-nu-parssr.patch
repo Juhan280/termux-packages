@@ -1,0 +1,105 @@
+diff --git a/build.rs b/build.rs
+index cadd1ad7..1f45013f 100644
+--- a/build.rs
++++ b/build.rs
+@@ -147,6 +147,11 @@ fn main() {
+             src_dir: "vendored_parsers/tree-sitter-newick-src",
+             extra_files: vec![],
+         },
++        TreeSitterParser {
++            name: "tree-sitter-nu",
++            src_dir: "vendored_parsers/tree-sitter-nu-src",
++            extra_files: vec!["scanner.c"],
++        },
+         TreeSitterParser {
+             name: "tree-sitter-perl",
+             src_dir: "vendored_parsers/tree-sitter-perl-src",
+diff --git a/src/parse/guess_language.rs b/src/parse/guess_language.rs
+index d714550b..084ad5b7 100644
+--- a/src/parse/guess_language.rs
++++ b/src/parse/guess_language.rs
+@@ -55,6 +55,7 @@ pub(crate) enum Language {
+     Make,
+     Newick,
+     Nix,
++    Nu,
+     ObjC,
+     OCaml,
+     OCamlInterface,
+@@ -155,6 +156,7 @@ pub(crate) fn language_name(language: Language) -> &'static str {
+         Make => "Make",
+         Newick => "Newick",
+         Nix => "Nix",
++        Nu => "Nu",
+         ObjC => "Objective-C",
+         OCaml => "OCaml",
+         OCamlInterface => "OCaml Interface",
+@@ -346,6 +348,7 @@ pub(crate) fn language_globs(language: Language) -> Vec<glob::Pattern> {
+         ],
+         Newick => &["*.nhx", "*.nwk", "*.nh"],
+         Nix => &["*.nix"],
++        Nu => &["*.nu"],
+         ObjC => &["*.m"],
+         OCaml => &["*.ml"],
+         OCamlInterface => &["*.mli"],
+@@ -597,6 +600,7 @@ fn from_shebang(src: &str) -> Option<Language> {
+                     "runghc" | "runhaskell" | "runhugs" => return Some(Haskell),
+                     "chakra" | "d8" | "gjs" | "js" | "node" | "nodejs" | "qjs" | "rhino" | "v8"
+                     | "v8-shell" => return Some(JavaScript),
++                    "nu" => return Some(Nu),
+                     "ocaml" | "ocamlrun" | "ocamlscript" => return Some(OCaml),
+                     "perl" => return Some(Perl),
+                     "python" | "python2" | "python3" => return Some(Python),
+diff --git a/src/parse/tree_sitter_parser.rs b/src/parse/tree_sitter_parser.rs
+index 8ad40d82..e9b0fc93 100644
+--- a/src/parse/tree_sitter_parser.rs
++++ b/src/parse/tree_sitter_parser.rs
+@@ -86,6 +86,7 @@ extern "C" {
+     fn tree_sitter_kotlin() -> ts::Language;
+     fn tree_sitter_latex() -> ts::Language;
+     fn tree_sitter_newick() -> ts::Language;
++    fn tree_sitter_nu() -> ts::Language;
+     fn tree_sitter_perl() -> ts::Language;
+     fn tree_sitter_qmljs() -> ts::Language;
+     fn tree_sitter_r() -> ts::Language;
+@@ -737,6 +738,24 @@ pub(crate) fn from_language(language: guess::Language) -> TreeSitterConfig {
+                 sub_languages: vec![],
+             }
+         }
++        Nu => {
++            let language = unsafe { tree_sitter_nu() };
++            TreeSitterConfig {
++                language: language.clone(),
++                atom_nodes: [].into_iter().collect(),
++                delimiter_tokens: vec![
++                    ("(", ")"),
++                    ("{", "}"),
++                    ("[", "]"),
++                ],
++                highlight_query: ts::Query::new(
++                    &language,
++                    include_str!("../../vendored_parsers/highlights/nu.scm"),
++                )
++                .unwrap(),
++                sub_languages: vec![],
++            }
++        }
+         ObjC => {
+             let language_fn = tree_sitter_objc::LANGUAGE;
+             let language = tree_sitter::Language::new(language_fn);
+diff --git a/vendored_parsers/highlights/nu.scm b/vendored_parsers/highlights/nu.scm
+new file mode 120000
+index 00000000..8572e6e8
+--- /dev/null
++++ b/vendored_parsers/highlights/nu.scm
+@@ -0,0 +1 @@
++../tree-sitter-nu/queries/nu/highlights.scm
+\ No newline at end of file
+diff --git a/vendored_parsers/tree-sitter-nu-src b/vendored_parsers/tree-sitter-nu-src
+new file mode 120000
+index 00000000..b2f0d087
+--- /dev/null
++++ b/vendored_parsers/tree-sitter-nu-src
+@@ -0,0 +1 @@
++tree-sitter-nu/src
+\ No newline at end of file
