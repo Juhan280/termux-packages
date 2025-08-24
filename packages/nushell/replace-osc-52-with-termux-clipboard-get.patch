@@ -7,7 +7,7 @@ index ef2da0bfd..eb7065916 100644
  export def paste []: [nothing -> string] {
    try {
 -    term query $'(ansi osc)52;c;?(ansi st)' -p $'(ansi osc)52;c;' -t (ansi st)
-+    termux-clipboard-get
++    ^@TERMUX_PREFIX@/bin/termux-clipboard-get
    } catch {
      error make -u {
 -      msg: "Terminal did not responds to OSC 52 paste request."
