@@ -32,7 +32,7 @@ index 514101304..55221955e 100644
  #include <sasl/sasl.h>
  #include <sasl/saslutil.h>
  
-+int  getdtablesize ();
++int                                                     getdtablesize ();
 +
  #include "hash.h"
  #include "imparse.h"
