@@ -1,0 +1,39 @@
+diff --git a/imap/conversations.c b/imap/conversations.c
+index 3012137d1..52800c8c1 100644
+--- a/imap/conversations.c
++++ b/imap/conversations.c
+@@ -53,6 +53,8 @@
+ #include <stdlib.h>
+ #include <sysexits.h>
+ 
++#include <stdbool.h>
++
+ #include "acl.h"
+ #include "annotate.h"
+ #include "append.h"
+diff --git a/imap/jmap_api.h b/imap/jmap_api.h
+index f4e4409a7..91d3ae94a 100644
+--- a/imap/jmap_api.h
++++ b/imap/jmap_api.h
+@@ -44,6 +44,8 @@
+ #ifndef JMAP_API_H
+ #define JMAP_API_H
+ 
++#include <stdbool.h>
++
+ #include "acl.h"
+ #include "auth.h"
+ #include "conversations.h"
+diff --git a/imtest/imtest.c b/imtest/imtest.c
+index 514101304..55221955e 100644
+--- a/imtest/imtest.c
++++ b/imtest/imtest.c
+@@ -69,6 +69,8 @@
+ #include <sasl/sasl.h>
+ #include <sasl/saslutil.h>
+ 
++int  getdtablesize ();
++
+ #include "hash.h"
+ #include "imparse.h"
+ #include "iptostring.h"
