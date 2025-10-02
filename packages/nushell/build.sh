@@ -10,6 +10,7 @@ TERMUX_PKG_DEPENDS="openssl"
 TERMUX_PKG_RECOMMENDS="command-not-found, termux-api"
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_BUILD_IN_SRC=true
+TERMUX_PKG_EXTRA_CONFIGURE_ARGS="--no-default-features --features plugin,trash-support,sqlite,native-tls"
 
 termux_step_pre_configure() {
 	termux_setup_rust
