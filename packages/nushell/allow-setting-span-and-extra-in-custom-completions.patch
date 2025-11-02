@@ -1,0 +1,83 @@
+From 3b98e0cc22813c9d0c253f5fa760c983f8fd4cc6 Mon Sep 17 00:00:00 2001
+From: ysthakur <45539777+ysthakur@users.noreply.github.com>
+Date: Tue, 3 Jun 2025 23:49:19 -0400
+Subject: [PATCH 1/2] Allow setting span and extra in custom completions
+
+---
+ crates/nu-cli/src/completions/completer.rs | 30 ++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+
+diff --git a/crates/nu-cli/src/completions/completer.rs b/crates/nu-cli/src/completions/completer.rs
+index b2ee95d7028c3..8ea06d68fe7e6 100644
+--- a/crates/nu-cli/src/completions/completer.rs
++++ b/crates/nu-cli/src/completions/completer.rs
+@@ -783,6 +783,36 @@ pub fn map_value_completions<'a>(
+                             _ => None,
+                         };
+                     }
++                    "extra" => {
++                        // Convert the value to string
++                        if let Ok(extras) = value.as_list().and_then(|extras| {
++                            extras
++                                .iter()
++                                .map(|extra| extra.coerce_string())
++                                .collect::<Result<Vec<_>, _>>()
++                        }) {
++                            // Update the suggestion value
++                            suggestion.extra = Some(extras);
++                        }
++                    }
++                    "span" => {
++                        if let Value::Record { val: span, .. } = value {
++                            let start = span
++                                .get("start")
++                                .and_then(|val| val.as_int().ok())
++                                .and_then(|x| usize::try_from(x).ok());
++                            let end = span
++                                .get("end")
++                                .and_then(|val| val.as_int().ok())
++                                .and_then(|x| usize::try_from(x).ok());
++                            if let (Some(start), Some(end)) = (start, end) {
++                                suggestion.span = reedline::Span {
++                                    start: start.min(end),
++                                    end,
++                                };
++                            }
++                        }
++                    }
+                     _ => (),
+                 }
+             });
+
+From 3526608966c06c9d968b53945b057f12cbf0bc7c Mon Sep 17 00:00:00 2001
+From: ysthakur <45539777+ysthakur@users.noreply.github.com>
+Date: Wed, 4 Jun 2025 00:03:53 -0400
+Subject: [PATCH 2/2] Don't allow setting extra
+
+---
+ crates/nu-cli/src/completions/completer.rs | 12 ------------
+ 1 file changed, 12 deletions(-)
+
+diff --git a/crates/nu-cli/src/completions/completer.rs b/crates/nu-cli/src/completions/completer.rs
+index 8ea06d68fe7e6..f2fd7e4971f05 100644
+--- a/crates/nu-cli/src/completions/completer.rs
++++ b/crates/nu-cli/src/completions/completer.rs
+@@ -783,18 +783,6 @@ pub fn map_value_completions<'a>(
+                             _ => None,
+                         };
+                     }
+-                    "extra" => {
+-                        // Convert the value to string
+-                        if let Ok(extras) = value.as_list().and_then(|extras| {
+-                            extras
+-                                .iter()
+-                                .map(|extra| extra.coerce_string())
+-                                .collect::<Result<Vec<_>, _>>()
+-                        }) {
+-                            // Update the suggestion value
+-                            suggestion.extra = Some(extras);
+-                        }
+-                    }
+                     "span" => {
+                         if let Value::Record { val: span, .. } = value {
+                             let start = span
