@@ -2,9 +2,9 @@ TERMUX_PKG_HOMEPAGE=https://www.nushell.sh
 TERMUX_PKG_DESCRIPTION="A new type of shell operating on structured data"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="0.111.0"
-TERMUX_PKG_SRCURL=https://github.com/nushell/nushell/archive/refs/tags/${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=e3a7980bb5532016036d9fdbbe0a2acc5a73f9549d1842ff6c8c0de2a6d1ddbe
+TERMUX_PKG_VERSION="0.110.0+git"
+TERMUX_PKG_SRCURL=git+https://github.com/nushell/nushell.git
+TERMUX_PKG_GIT_BRANCH=main
 TERMUX_PKG_DEPENDS="openssl"
 TERMUX_PKG_RECOMMENDS="command-not-found, termux-api"
 TERMUX_PKG_BUILD_IN_SRC=true
@@ -12,6 +12,8 @@ TERMUX_PKG_AUTO_UPDATE=true
 
 termux_step_pre_configure() {
 	termux_setup_rust
+
+	export CARGO_PKG_VERSION="${TERMUX_PKG_VERSION}$(git rev-parse --short HEAD)"
 
 	if [ "$TERMUX_ARCH" = "x86_64" ]; then
 		local env_host=$(printf $CARGO_TARGET_NAME | tr a-z A-Z | sed s/-/_/g)
