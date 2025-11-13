@@ -1,20 +1,14 @@
-diff --git a/Cargo.toml b/Cargo.toml
-index 34a0c5be..00d6e17b 100644
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -161,7 +161,9 @@ strip-ansi-escapes = "0.2.1"
- strum = "0.26"
- strum_macros = "0.26"
- syn = "2.0"
--sysinfo = "0.36"
-+# Starting from 0.36, the `user` feature uses `getpwent`, etc.
-+# These were added to Android in API 26, but termux currently targets API 24.
-+sysinfo = { version = "0.36", default-features = false, features = ["component", "disk", "network", "system"] }
- tabled = { version = "0.20", default-features = false }
- tempfile = "3.20"
- thiserror = "2.0.12"
+From e7a5b9427f1fd2a2e2529bc00c56acbcbe9593a8 Mon Sep 17 00:00:00 2001
+From: Juhan280 <azurarobo280@gmail.com>
+Date: Fri, 14 Nov 2025 12:06:03 +0600
+Subject: [PATCH 1/2] disable-feature-user
+
+---
+ crates/nu-command/src/system/sys/users.rs | 24 +++--------------------
+ 1 file changed, 3 insertions(+), 21 deletions(-)
+
 diff --git a/crates/nu-command/src/system/sys/users.rs b/crates/nu-command/src/system/sys/users.rs
-index ffc84f05..985ea1f1 100644
+index 88b22f7..ceaaa00 100644
 --- a/crates/nu-command/src/system/sys/users.rs
 +++ b/crates/nu-command/src/system/sys/users.rs
 @@ -1,6 +1,4 @@
@@ -24,7 +18,7 @@ index ffc84f05..985ea1f1 100644
  
  #[derive(Clone)]
  pub struct SysUsers;
-@@ -40,23 +38,6 @@ impl Command for SysUsers {
+@@ -40,23 +38,7 @@ impl Command for SysUsers {
  }
  
  fn users(span: Span) -> Value {
@@ -47,6 +41,10 @@ index ffc84f05..985ea1f1 100644
 -        .collect();
 -
 -    Value::list(users, span)
-+    // `sysinfo:Users` feature is disabled.
++    // Starting from 0.36, the `user` feature of `sysinfo` uses `getpwent`, etc.
++    // These were added to Android in API 26, but termux currently targets API 24.
 +    Value::list(Vec::new(), span)
  }
+-- 
+2.51.2
+
