@@ -1,3 +1,12 @@
+From 8dcf413d015f96f87e68bd446a9b9463e006aed3 Mon Sep 17 00:00:00 2001
+From: Juhan280 <azurarobo280@gmail.com>
+Date: Mon, 8 Sep 2025 02:07:14 +0600
+Subject: [PATCH 2/2] replace osc 52 with termux-clipboard-get
+
+---
+ crates/nu-std/std/clip/mod.nu | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
+
 diff --git a/crates/nu-std/std/clip/mod.nu b/crates/nu-std/std/clip/mod.nu
 index ef2da0b..d313485 100644
 --- a/crates/nu-std/std/clip/mod.nu
@@ -22,3 +31,6 @@ index ef2da0b..d313485 100644
  }
  
  # Add a prefix to each line of the content to be copied
+-- 
+2.52.0
+

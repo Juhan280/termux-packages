@@ -1,20 +1,14 @@
-diff --git a/Cargo.toml b/Cargo.toml
-index d439ffc..aa245fa 100644
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -177,7 +177,9 @@ strip-ansi-escapes = "0.2.1"
- strum = "0.26"
- strum_macros = "0.27"
- syn = "2.0"
--sysinfo = "0.37.2"
-+# Starting from 0.36, the `user` feature uses `getpwent`, etc.
-+# These were added to Android in API 26, but termux currently targets API 24.
-+sysinfo = { version = "0.37.2", default-features = false, features = ["component", "disk", "network", "system"] }
- tabled = { version = "0.20", default-features = false }
- tempfile = "3.23"
- thiserror = "2.0.12"
+From d5e61ef3476338a71e294eb0d698bacc452396a1 Mon Sep 17 00:00:00 2001
+From: Juhan280 <azurarobo280@gmail.com>
+Date: Fri, 14 Nov 2025 12:06:03 +0600
+Subject: [PATCH 1/2] remove `sysinfo::Users`
+
+---
+ crates/nu-command/src/system/sys/users.rs | 24 +++--------------------
+ 1 file changed, 3 insertions(+), 21 deletions(-)
+
 diff --git a/crates/nu-command/src/system/sys/users.rs b/crates/nu-command/src/system/sys/users.rs
-index 88b22f7..35ccd31 100644
+index 88b22f7..ceaaa00 100644
 --- a/crates/nu-command/src/system/sys/users.rs
 +++ b/crates/nu-command/src/system/sys/users.rs
 @@ -1,6 +1,4 @@
@@ -24,7 +18,7 @@ index 88b22f7..35ccd31 100644
  
  #[derive(Clone)]
  pub struct SysUsers;
-@@ -40,23 +38,6 @@ impl Command for SysUsers {
+@@ -40,23 +38,7 @@ impl Command for SysUsers {
  }
  
  fn users(span: Span) -> Value {
@@ -47,6 +41,10 @@ index 88b22f7..35ccd31 100644
 -        .collect();
 -
 -    Value::list(users, span)
-+    // `sysinfo:Users` feature is disabled.
++    // Starting from 0.36, the `user` feature of `sysinfo` uses `getpwent`, etc.
++    // These were added to Android in API 26, but termux currently targets API 24.
 +    Value::list(Vec::new(), span)
  }
+-- 
+2.52.0
+

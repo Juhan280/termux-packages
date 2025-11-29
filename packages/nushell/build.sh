@@ -3,6 +3,7 @@ TERMUX_PKG_DESCRIPTION="A new type of shell operating on structured data"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="@termux"
 TERMUX_PKG_VERSION="0.109.1"
+TERMUX_PKG_REVISION=1
 TERMUX_PKG_SRCURL=https://github.com/nushell/nushell/archive/refs/tags/${TERMUX_PKG_VERSION}.tar.gz
 TERMUX_PKG_SHA256=53d4611113a17ed3a29b0c81ea981d546a40dafca77fdcd9af7a7629ceabf48f
 TERMUX_PKG_DEPENDS="openssl"
