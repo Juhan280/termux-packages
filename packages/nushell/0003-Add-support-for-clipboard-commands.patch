@@ -1,0 +1,194 @@
+From 2752df703ff7e6cab842818dfbf5d9d0ab0c0a5d Mon Sep 17 00:00:00 2001
+From: Juhan280 <azurarobo280@gmail.com>
+Date: Sat, 21 Feb 2026 21:19:39 +0600
+Subject: [PATCH 3/3] Add support for clipboard commands
+
+---
+ .../src/platform/clip/clipboard/mod.rs        |  10 +-
+ .../src/platform/clip/clipboard/provider.rs   |  16 ++-
+ .../src/platform/clip/clipboard/termux.rs     | 119 ++++++++++++++++++
+ 3 files changed, 143 insertions(+), 2 deletions(-)
+ create mode 100644 crates/nu-command/src/platform/clip/clipboard/termux.rs
+
+diff --git a/crates/nu-command/src/platform/clip/clipboard/mod.rs b/crates/nu-command/src/platform/clip/clipboard/mod.rs
+index 91e6622..bf605c2 100644
+--- a/crates/nu-command/src/platform/clip/clipboard/mod.rs
++++ b/crates/nu-command/src/platform/clip/clipboard/mod.rs
+@@ -8,6 +8,14 @@ pub mod provider;
+ #[cfg(target_os = "linux")]
+ pub(crate) mod linux;
+ 
++#[cfg(target_os = "android")]
++pub(crate) mod termux;
++
+ // On other platforms, the clipboard is either a dummy or implemented in `provider.rs`.
+-#[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
++#[cfg(not(any(
++    target_os = "android",
++    target_os = "linux",
++    target_os = "macos",
++    target_os = "windows"
++)))]
+ pub(crate) mod dummy;
+diff --git a/crates/nu-command/src/platform/clip/clipboard/provider.rs b/crates/nu-command/src/platform/clip/clipboard/provider.rs
+index 4495c1b..33622d2 100644
+--- a/crates/nu-command/src/platform/clip/clipboard/provider.rs
++++ b/crates/nu-command/src/platform/clip/clipboard/provider.rs
+@@ -37,6 +37,15 @@ mod arboard_clipboard {
+     }
+ }
+ 
++#[cfg(target_os = "android")]
++pub fn create_clipboard(
++    _config: &Config,
++    _engine_state: &EngineState,
++    _stack: &mut Stack,
++) -> impl Clipboard {
++    super::termux::ClipBoardTermux::new()
++}
++
+ #[cfg(target_os = "linux")]
+ pub fn create_clipboard(
+     config: &Config,
+@@ -55,7 +64,12 @@ pub fn create_clipboard(
+     arboard_clipboard::ArboardClipboard::new()
+ }
+ 
+-#[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
++#[cfg(not(any(
++    target_os = "android",
++    target_os = "linux",
++    target_os = "macos",
++    target_os = "windows"
++)))]
+ pub fn create_clipboard(
+     _config: &Config,
+     _engine_state: &EngineState,
+diff --git a/crates/nu-command/src/platform/clip/clipboard/termux.rs b/crates/nu-command/src/platform/clip/clipboard/termux.rs
+new file mode 100644
+index 0000000..adcef5b
+--- /dev/null
++++ b/crates/nu-command/src/platform/clip/clipboard/termux.rs
+@@ -0,0 +1,119 @@
++use std::{
++    io::{Read, Write},
++    process::{Command, Stdio},
++    sync::mpsc,
++    thread,
++    time::Duration,
++};
++
++use nu_protocol::{ShellError, Span};
++use uucore::process::ChildExt;
++
++use super::provider::Clipboard;
++
++pub(crate) struct ClipBoardTermux;
++
++impl ClipBoardTermux {
++    pub fn new() -> Self {
++        Self
++    }
++}
++
++impl Clipboard for ClipBoardTermux {
++    fn copy_text(&self, text: &str) -> Result<(), ShellError> {
++        let mut child = Command::new("termux-clipboard-set")
++            .stdin(Stdio::piped())
++            .spawn()
++            .map_err(|_| ShellError::GenericError {
++                error: "Failed to run `termux-clipboard-set`".into(),
++                msg: String::new(),
++                help: Some("Make sure you have termux-api package installed.".into()),
++                span: None,
++                inner: vec![],
++            })?;
++
++        let stdin = child.stdin.as_mut().expect("stdin is present");
++        stdin
++            .write_all(text.as_bytes())
++            .map_err(|_| ShellError::GenericError {
++                error: "Failed to run `termux-clipboard-set`".into(),
++                msg: String::new(),
++                help: Some("Make sure you have termux-api package installed.".into()),
++                span: None,
++                inner: vec![],
++            })?;
++
++        let success = child
++            .wait_or_timeout(Duration::from_secs(5), None)
++            .map_err(|_| {
++                let _ = child.kill();
++                let _ = child.wait();
++
++                ShellError::GenericError {
++                    error: "Failed to copy text.".into(),
++                    msg: String::new(),
++                    help: Some("Make sure you have Termux:API add-on installed.".into()),
++                    span: None,
++                    inner: vec![],
++                }
++            })?
++            .is_some_and(|status| status.success());
++
++        if !success {
++            return Err(ShellError::GenericError {
++                error: "Failed to copy text.".into(),
++                msg: String::new(),
++                help: Some("Make sure you have Termux:API add-on installed.".into()),
++                span: None,
++                inner: vec![],
++            });
++        }
++
++        Ok(())
++    }
++
++    fn get_text(&self) -> Result<String, ShellError> {
++        let mut child = Command::new("termux-clipboard-get")
++            .stdout(Stdio::piped())
++            .spawn()
++            .map_err(|_| ShellError::GenericError {
++                error: "Failed to run `termux-clipboard-get`".into(),
++                msg: String::new(),
++                help: Some("Make sure you have termux-api package installed.".into()),
++                span: None,
++                inner: vec![],
++            })?;
++
++        let mut stdout = child.stdout.take().expect("stdout is present");
++
++        let (tx, rx) = mpsc::channel();
++
++        thread::spawn(move || {
++            let mut buf = String::new();
++            let res = stdout.read_to_string(&mut buf);
++            let _ = tx.send(res.map(|_| buf));
++        });
++
++        let output = rx.recv_timeout(Duration::from_secs(5));
++
++        let _ = child.kill();
++        let _ = child.wait();
++
++        match output {
++            Ok(Ok(str)) => Ok(str),
++            Ok(Err(_)) => Err(ShellError::CantConvert {
++                to_type: "string".into(),
++                from_type: "binary".into(),
++                span: Span::unknown(),
++                help: None,
++            }),
++            Err(_) => Err(ShellError::GenericError {
++                error: "Failed to get clipboard text (timeout).".into(),
++                msg: String::new(),
++                span: None,
++                help: Some("Make sure you have Termux:API add-on installed.".into()),
++                inner: vec![],
++            }),
++        }
++    }
++}
+-- 
+2.43.0
+
