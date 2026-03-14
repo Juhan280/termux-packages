@@ -1,14 +1,14 @@
-From 56b1b3dd22cf67472f9959cab5eca603eff6e079 Mon Sep 17 00:00:00 2001
+From 41ab8f4eacf96fd9ac43808a9317fa7e1281ba14 Mon Sep 17 00:00:00 2001
 From: Termux <contact@termux.dev>
 Date: Mon, 8 Sep 2025 02:07:14 +0600
-Subject: [PATCH 2/2] replace osc 52 paste with termux-clipboard-get
+Subject: [PATCH 2/3] replace osc 52 paste with termux-clipboard-get
 
 ---
  crates/nu-std/std/clip/mod.nu | 9 +++------
  1 file changed, 3 insertions(+), 6 deletions(-)
 
 diff --git a/crates/nu-std/std/clip/mod.nu b/crates/nu-std/std/clip/mod.nu
-index d559fab..fb08e3a 100644
+index d559faba..fb08e3a7 100644
 --- a/crates/nu-std/std/clip/mod.nu
 +++ b/crates/nu-std/std/clip/mod.nu
 @@ -52,16 +52,13 @@ export def paste []: [nothing -> string] {
@@ -32,5 +32,5 @@ index d559fab..fb08e3a 100644
  
  # After deprecated commands are removed, prefix will need to be changed to use clip copy or clip copy52.
 -- 
-2.53.0
+2.43.0
 
