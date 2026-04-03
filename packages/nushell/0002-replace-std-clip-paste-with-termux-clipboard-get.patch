@@ -1,0 +1,32 @@
+From 388d02eaeb071361d78a9efe160776339a7b6649 Mon Sep 17 00:00:00 2001
+From: Termux <contact@termux.dev>
+Date: Sat, 4 Apr 2026 02:30:06 +0600
+Subject: [PATCH 2/3] replace `std/clip paste` with termux-clipboard-get
+
+---
+ crates/nu-std/std/clip/mod.nu | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/crates/nu-std/std/clip/mod.nu b/crates/nu-std/std/clip/mod.nu
+index d559faba..140d0958 100644
+--- a/crates/nu-std/std/clip/mod.nu
++++ b/crates/nu-std/std/clip/mod.nu
+@@ -43,7 +43,14 @@ export def copy52 [
+   paste
+ } --result "Hello"
+ export def paste []: [nothing -> string] {
+-  paste52
++  try {
++    ^@TERMUX_PREFIX@/bin/termux-clipboard-get
++  } catch {
++    error make -u {
++      msg: "termux-clipboard-get failed to paste."
++      help: "Make sure you have Termux:API app and termux-api package installed."
++    }
++  }
+ }
+ 
+ # Paste contents of system clipboard using OSC 52 request
+-- 
+2.43.0
+

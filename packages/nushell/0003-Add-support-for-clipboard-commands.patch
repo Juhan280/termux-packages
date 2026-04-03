@@ -1,4 +1,4 @@
-From a8dfa9bb2c1d4eeeac1bb33be9d9b52f20310722 Mon Sep 17 00:00:00 2001
+From b3543e43a9ad40bd197b918dd397669453c58924 Mon Sep 17 00:00:00 2001
 From: Juhan280 <azurarobo280@gmail.com>
 Date: Sat, 21 Feb 2026 21:19:39 +0600
 Subject: [PATCH 3/3] Add support for clipboard commands
@@ -6,8 +6,8 @@ Subject: [PATCH 3/3] Add support for clipboard commands
 ---
  .../src/platform/clip/clipboard/mod.rs        |  10 +-
  .../src/platform/clip/clipboard/provider.rs   |  16 ++-
- .../src/platform/clip/clipboard/termux.rs     | 104 ++++++++++++++++++
- 3 files changed, 128 insertions(+), 2 deletions(-)
+ .../src/platform/clip/clipboard/termux.rs     | 110 ++++++++++++++++++
+ 3 files changed, 134 insertions(+), 2 deletions(-)
  create mode 100644 crates/nu-command/src/platform/clip/clipboard/termux.rs
 
 diff --git a/crates/nu-command/src/platform/clip/clipboard/mod.rs b/crates/nu-command/src/platform/clip/clipboard/mod.rs
@@ -66,10 +66,10 @@ index 4495c1b2..33622d28 100644
      _engine_state: &EngineState,
 diff --git a/crates/nu-command/src/platform/clip/clipboard/termux.rs b/crates/nu-command/src/platform/clip/clipboard/termux.rs
 new file mode 100644
-index 00000000..9d6d3542
+index 00000000..606a6df9
 --- /dev/null
 +++ b/crates/nu-command/src/platform/clip/clipboard/termux.rs
-@@ -0,0 +1,104 @@
+@@ -0,0 +1,110 @@
 +use std::{
 +    io::{Read, Write},
 +    process::{Command, Stdio},
@@ -99,9 +99,12 @@ index 00000000..9d6d3542
 +        let mut child = Command::new("termux-clipboard-set")
 +            .stdin(Stdio::piped())
 +            .spawn()
-+            .map_err(|err| {
-+                GenericError::new_internal("Failed to run `termux-clipboard-set`", err.to_string())
-+                    .with_help(INSTALL_TERMUX_API_PACKAGE_TEXT)
++            .map_err(|_| {
++                GenericError::new_internal(
++                    "Failed to run `termux-clipboard-set`",
++                    "command not found",
++                )
++                .with_help(INSTALL_TERMUX_API_PACKAGE_TEXT)
 +            })?;
 +
 +        let stdin = child.stdin.as_mut().expect("stdin is present");
@@ -137,9 +140,12 @@ index 00000000..9d6d3542
 +        let mut child = Command::new("termux-clipboard-get")
 +            .stdout(Stdio::piped())
 +            .spawn()
-+            .map_err(|err| {
-+                GenericError::new_internal("Failed to run `termux-clipboard-get`", err.to_string())
-+                    .with_help(INSTALL_TERMUX_API_PACKAGE_TEXT)
++            .map_err(|_| {
++                GenericError::new_internal(
++                    "Failed to run `termux-clipboard-get`",
++                    "command not found",
++                )
++                .with_help(INSTALL_TERMUX_API_PACKAGE_TEXT)
 +            })?;
 +
 +        let mut stdout = child.stdout.take().expect("stdout is present");
